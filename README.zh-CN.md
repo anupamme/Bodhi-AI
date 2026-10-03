@@ -20,6 +20,18 @@
 
 表格对应截至 2026-10-03 查到的最新公开版本 [app-v2026.9.20](https://github.com/bigduu/Bodhi-AI/releases/tag/app-v2026.9.20)，表示有这些发布产物，不表示本次文档更新实测了所有平台。Linux 需要图形会话及对应的 WebKitGTK/运行时依赖。源码构建请遵循 [Tauri 平台前置要求](https://v2.tauri.app/start/prerequisites/)。
 
+## 在 macOS 上通过 Homebrew 安装
+
+```sh
+brew tap bigduu/tap
+brew trust bigduu/tap
+brew install --cask bigduu/tap/bodhi
+```
+
+`brew trust` 会明确信任这个第三方 tap，包括它未来发布的包，使 Homebrew 能加载 Bodhi cask 依赖的 formula。[Bodhi cask](https://github.com/bigduu/homebrew-tap) 会按 Apple Silicon 或 Intel 机型选择 DMG，并安装 **Jiandu** 和 **Nova** 命令行工具；Bodhi 已内置 Bamboo 引擎。安装 Jiandu 和 Nova 不会自动配置 MCP host；Nova 的电脑控制功能还需要相应的 macOS 权限。
+
+**当前 macOS 签名方式：** 已发布的 DMG 使用 ad-hoc 签名，尚未取得 Developer ID 公证。通过 Homebrew 安装时，cask 会自动移除已安装应用的 quarantine 标记，在保留 hardened runtime 的同时进行本机 ad-hoc 自签，并校验签名；此安装方式无需手动执行自签脚本。这不等于获得 Developer ID 信任或公证，升级后也可能需要重新授予 macOS 隐私权限。直接安装 DMG 时可使用[自签脚本](./scripts/self-sign-macos-app.sh)；正式签名与公证进度见 [Bodhi #75](https://github.com/bigduu/Bodhi-AI/issues/75)。
+
 ## 它如何帮助你工作
 
 - **快速回到工作窗口：** macOS 使用 `Cmd+Shift+Space`，Windows/Linux 使用 `Ctrl+Shift+Space` 显示或隐藏窗口，需操作系统允许注册该快捷键。

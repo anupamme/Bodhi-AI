@@ -20,6 +20,18 @@ Use it when you want to work with an agent on a project without keeping a backen
 
 The table reflects [app-v2026.9.20](https://github.com/bigduu/Bodhi-AI/releases/tag/app-v2026.9.20), the latest public release observed on 2026-10-03. It is an artifact inventory, not a claim that every OS was tested in this documentation refresh. Linux needs a graphical session and the platform's WebKitGTK/runtime dependencies. For source builds, follow the [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/).
 
+## Install on macOS with Homebrew
+
+```sh
+brew tap bigduu/tap
+brew trust bigduu/tap
+brew install --cask bigduu/tap/bodhi
+```
+
+`brew trust` explicitly trusts this third-party tap, including future packages from it, so Homebrew can load the cask's formula dependencies. The [Bodhi cask](https://github.com/bigduu/homebrew-tap) selects the Apple Silicon or Intel DMG and installs the **Jiandu** and **Nova** command-line tools. Bodhi already bundles its Bamboo engine. Installing Jiandu and Nova does not configure an MCP host; Nova also needs macOS permissions for computer control.
+
+**Current macOS signing:** the published DMG is ad-hoc signed and is not Developer ID notarized. During Homebrew installation, the cask automatically removes quarantine from the installed app, re-signs it locally with an ad-hoc signature while preserving the hardened runtime, and verifies the signature. No manual self-sign step is needed for this installation path. This does not provide Developer ID trust or notarization, and macOS privacy permissions may need to be granted again after upgrades. Direct DMG installations can use [the self-sign script](./scripts/self-sign-macos-app.sh); formal signing is tracked in [Bodhi #75](https://github.com/bigduu/Bodhi-AI/issues/75).
+
 ## Work with it
 
 - **Return to your work quickly:** `Cmd+Shift+Space` on macOS or `Ctrl+Shift+Space` on Windows/Linux toggles the main window, when the OS allows the shortcut.
