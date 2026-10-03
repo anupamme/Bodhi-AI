@@ -1,5 +1,9 @@
 # Bodhi AI
 
+![Bodhi brand illustration: a luminous bodhi leaf above a symbolic desktop workbench, representing wisdom.](docs/assets/bodhi-nature-hero.png)
+
+*Brand illustration, not a software screenshot. The bodhi leaf symbolizes wisdom.*
+
 [中文](README.zh-CN.md) · [Download desktop app](https://github.com/bigduu/Bodhi-AI/releases/latest) · [Development guide](docs/development.md)
 
 **A desktop home for your local AI agent.** Bodhi brings the [Zenith](https://github.com/bigduu/Zenith) agent harness to a native window: use Lotus Next to work with conversations and tools, while Bodhi starts and stops the local Bamboo engine for you.

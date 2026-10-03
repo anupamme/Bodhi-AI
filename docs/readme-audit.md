@@ -23,3 +23,16 @@ Implementation sources reviewed:
 The old README's “release train still needs a follow-up PR” text was historical change narration, not a current installation requirement. Assembly, rollback, native integrations and isolated acceptance instructions are retained in the bilingual development guides.
 
 Validation: relative Markdown links checked, `git diff --check` passed. No native app was launched in this headless Linux documentation task, and no macOS/Windows runtime verification is claimed. Published asset availability is distinct from runtime acceptance. GitHub's public API returned HTTP 403, so public release HTML, tags and asset HTML were used instead. No credentials or user application state were inspected.
+
+## Approved brand illustration
+
+The user-approved nature illustration is saved at `docs/assets/bodhi-nature-hero.png`.
+The original PNG was visually inspected and decoded, and its SHA-256 matched
+the approved image package. It is a brand illustration, not a software screenshot;
+the README alt text and visible caption say so. Existing source/release and
+recording limits still apply. The older artwork remains in repository history
+and any existing SVG asset is preserved.
+
+- Pixels: 1672 × 941 (RGB PNG)
+- Bytes: 1939284
+- SHA-256: `e63928e03b038650b83ba6a259eef45057f3ff09271b7cb6e7aa273822cdb08f`

@@ -1,5 +1,9 @@
 # Bodhi AI
 
+![Bodhi 品牌插画：菩提叶映照象征性的桌面工作台，寓意智慧。](docs/assets/bodhi-nature-hero.png)
+
+*品牌插画，非软件截图。菩提叶象征智慧。*
+
 [English](README.md) · [下载桌面应用](https://github.com/bigduu/Bodhi-AI/releases/latest) · [开发指南](docs/development.zh-CN.md)
 
 **把本地 AI agent 带到桌面。** Bodhi 是 [Zenith](https://github.com/bigduu/Zenith) 本地 agent harness 套件的桌面入口：通过 Lotus Next 操作会话与工具，由 Bodhi 为你启动和关闭本地 Bamboo 引擎。
