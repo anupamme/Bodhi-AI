@@ -1,30 +1,47 @@
 # Bodhi AI
 
-![Bodhi brand illustration: a luminous bodhi leaf above a symbolic desktop workbench, representing wisdom.](docs/assets/bodhi-nature-hero.png)
+[English](README.md) · [简体中文](README.zh-CN.md)
 
-*Brand illustration, not a software screenshot. The bodhi leaf symbolizes wisdom.*
+**Your local-first AI agent, in a desktop window.** Hand it a task, watch every
+tool call and approval, and keep working without a backend terminal open. Bodhi
+starts and stops its bundled Bamboo agent runtime for you and opens the Lotus
+Next interface.
 
-[中文](README.zh-CN.md) · [Download desktop app](https://github.com/bigduu/Bodhi-AI/releases/latest) · [Development guide](docs/development.md)
+[Download](https://github.com/bigduu/Bodhi-AI/releases/latest) · Part of [Bodhi / Zenith](https://github.com/bigduu/Zenith) · [Development guide](docs/development.md) · [MIT](LICENSE)
 
-**A desktop home for your local AI agent.** Bodhi brings the [Zenith](https://github.com/bigduu/Zenith) agent harness to a native window: use Lotus Next to work with conversations and tools, while Bodhi starts and stops the local Bamboo engine for you.
+<p align="center"><img src="https://raw.githubusercontent.com/bigduu/Zenith/main/docs/readme-refresh/demos/project-workspace.gif" alt="Lotus Next, the interface Bodhi opens, creates a project and selects its workspace for a new task." width="760"></p>
 
-Use it when you want to work with an agent on a project without keeping a backend terminal open. The UI lets you follow messages, tool activity and approval requests; the desktop shell adds a global shortcut and system notifications. A model provider is still required for AI responses. Local execution does not mean your chosen model runs locally or that requests never leave your machine.
+*Lotus Next recorded in a browser against Bamboo source with demo data; no model call. The packaged app may use an earlier Lotus Next build.*
 
-## Try the desktop app
+- **Works on your projects:** reads and edits files, runs commands and searches
+  or fetches web pages, asking for approval before risky actions.
+- **Keeps working on a schedule:** cron-style schedules and workflows in the
+  bundled Bamboo runtime.
+- **Your choice of model:** Anthropic, OpenAI (and OpenAI-compatible endpoints),
+  Gemini or GitHub Copilot.
+- **Extends with MCP:** the Homebrew install also adds the
+  [Jiandu](https://github.com/bigduu/Jiandu) (shared memory) and
+  [Nova](https://github.com/bigduu/Nova) (native app control) command-line
+  tools, which you can add as MCP servers.
 
-1. Download the installer matching your platform from [Releases](https://github.com/bigduu/Bodhi-AI/releases/latest).
-2. Install and launch Bodhi AI. It starts its bundled Bamboo engine and opens its packaged Lotus Next interface.
-3. Open **Settings → Providers**, configure a provider you can access, then start a conversation. A useful first task is to explain a small sample project before requesting file changes.
+## Install
 
-| Platform | Published installer formats |
+| Platform | How |
 |---|---|
-| macOS, Apple Silicon or Intel | Architecture-specific `.dmg` |
-| Windows, x64 | `-setup.exe` |
-| Linux, x64 | `.deb`, `.AppImage`, `.rpm` in the audited release |
+| macOS (recommended) | `brew tap bigduu/tap && brew trust bigduu/tap && brew install --cask bigduu/tap/bodhi` |
+| macOS (manual) | Apple Silicon or Intel `.dmg` from [Releases](https://github.com/bigduu/Bodhi-AI/releases/latest); not notarized yet, so run the [self-sign script](./scripts/self-sign-macos-app.sh) or use Homebrew |
+| Windows x64 | `-setup.exe` (unsigned; SmartScreen may warn) |
+| Linux x64 | `.AppImage`, `.deb` or `.rpm` (needs a graphical session and WebKitGTK runtime) |
 
-The table reflects [app-v2026.9.20](https://github.com/bigduu/Bodhi-AI/releases/tag/app-v2026.9.20), the latest public release observed on 2026-10-03. It is an artifact inventory, not a claim that every OS was tested in this documentation refresh. Linux needs a graphical session and the platform's WebKitGTK/runtime dependencies. For source builds, follow the [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/).
+Then open **Settings → Provider** (shown as **设置 → 提供方** in the current release, whose settings screen is not translated yet), add a key for a provider you can access, and
+try: *"Explain this folder, then suggest one small improvement."* Start with a
+small sample project before asking for file changes. A model provider is still
+required: local execution does not mean the model runs locally or that requests
+never leave your machine.
 
-## Install on macOS with Homebrew
+The table reflects [app-v2026.9.20](https://github.com/bigduu/Bodhi-AI/releases/tag/app-v2026.9.20), the latest public release on 2026-10-04. It is an artifact inventory, not a claim that every OS was tested in this documentation refresh. For source builds, follow the [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/).
+
+### Homebrew details
 
 ```sh
 brew tap bigduu/tap
@@ -53,7 +70,7 @@ flowchart LR
   Bamboo --> Provider["Configured model provider and tools"]
 ```
 
-Bodhi packages a startup page, verified frontend resources and a standalone `bamboo serve` sidecar. It does not link the Bamboo runtime as a Rust library. [Nova](https://github.com/bigduu/nova) provides separately configured computer/browser tools; installing the shell alone does not establish that those tools are ready. [bodhi-server](https://github.com/bigduu/bodhi-server) is a separate service for hosted account/proxy use, not the local engine.
+Bodhi packages a startup page, verified frontend resources and a standalone `bamboo serve` sidecar. It does not link the Bamboo runtime as a Rust library. [Nova](https://github.com/bigduu/Nova) provides separately configured computer/browser tools; installing the shell alone does not establish that those tools are ready. [bodhi-server](https://github.com/bigduu/bodhi-server) is a separate service for hosted account/proxy use, not the local engine.
 
 ## Source checkout versus released app
 
@@ -87,3 +104,8 @@ npm run test:build      # Source-selection and assembly tests (no Cargo)
 ```
 
 For browser-only development, use the [Lotus Next README](https://github.com/bigduu/lotus-next). Detailed source selection, package verification, diagnostics, public/internal modes and isolated macOS restart acceptance remain in the [development guide](docs/development.md).
+
+## License
+
+Project-owned code and documentation are licensed under the [MIT License](./LICENSE).
+Third-party components retain their respective licenses and copyright notices.

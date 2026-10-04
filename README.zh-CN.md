@@ -1,30 +1,39 @@
 # Bodhi AI
 
-![Bodhi 品牌插画：菩提叶映照象征性的桌面工作台，寓意智慧。](docs/assets/bodhi-nature-hero.png)
+[English](README.md) · [简体中文](README.zh-CN.md)
 
-*品牌插画，非软件截图。菩提叶象征智慧。*
+**跑在你电脑上的 AI Agent，装进一个桌面窗口。** 交给它任务，每一次工具调用和权限确认都看得见，
+不用一直开着后端终端。Bodhi 会替你启动和关闭内置的 Bamboo agent 运行时，并打开 Lotus Next 界面。
 
-[English](README.md) · [下载桌面应用](https://github.com/bigduu/Bodhi-AI/releases/latest) · [开发指南](docs/development.zh-CN.md)
+[下载](https://github.com/bigduu/Bodhi-AI/releases/latest) · [Bodhi / Zenith 总仓库](https://github.com/bigduu/Zenith) · [开发指南](docs/development.zh-CN.md) · [MIT 开源](LICENSE)
 
-**把本地 AI agent 带到桌面。** Bodhi 是 [Zenith](https://github.com/bigduu/Zenith) 本地 agent harness 套件的桌面入口：通过 Lotus Next 操作会话与工具，由 Bodhi 为你启动和关闭本地 Bamboo 引擎。
+<p align="center"><img src="https://raw.githubusercontent.com/bigduu/Zenith/main/docs/readme-refresh/demos/project-workspace.gif" alt="Bodhi 打开的界面 Lotus Next 创建项目，并为新任务选择工作区。" width="760"></p>
 
-适合希望让 agent 协助项目工作、又不想一直维护后端终端的用户。界面展示消息、工具活动和审批请求；桌面外壳提供全局快捷键与系统通知。AI 回复仍需可用的模型提供方。本地执行不代表模型一定运行在本地，也不代表请求不会离开设备。
+*在浏览器中连接 Bamboo 源码录制的 Lotus Next，使用演示数据，没有调用模型。打包的应用可能使用更早的 Lotus Next 版本。*
 
-## 开始使用
+- **直接处理你的项目**：读写文件、执行命令、搜索和抓取网页，高风险操作前会先征求你的同意。
+- **能按计划持续干活**：内置的 Bamboo 运行时支持定时任务和工作流。
+- **模型自己选**：Anthropic、OpenAI（以及兼容 OpenAI 接口的服务）、Gemini 或 GitHub Copilot。
+- **用 MCP 扩展**：通过 Homebrew 安装时还会装上[简牍 Jiandu](https://github.com/bigduu/Jiandu)
+  （共享记忆）和 [Nova](https://github.com/bigduu/Nova)（操作原生应用）两个命令行工具，可以作为
+  MCP 服务接入。
 
-1. 从 [Releases](https://github.com/bigduu/Bodhi-AI/releases/latest) 下载适合平台的安装包。
-2. 安装并启动 Bodhi AI。它会启动随包提供的 Bamboo 引擎，并打开打包的 Lotus Next 界面。
-3. 打开 **设置 → 提供商**，配置你有权限访问的模型提供方，再开始会话。可以先让它解释一个小型示例项目，再尝试修改文件。
+## 安装
 
-| 平台 | 已发布安装包格式 |
+| 平台 | 方式 |
 |---|---|
-| macOS，Apple Silicon 或 Intel | 按架构选择 `.dmg` |
-| Windows，x64 | `-setup.exe` |
-| Linux，x64 | 核对版本包含 `.deb`、`.AppImage`、`.rpm` |
+| macOS（推荐） | `brew tap bigduu/tap && brew trust bigduu/tap && brew install --cask bigduu/tap/bodhi` |
+| macOS（手动） | 从 [Releases](https://github.com/bigduu/Bodhi-AI/releases/latest) 下载 Apple Silicon 或 Intel 的 `.dmg`；暂未公证，需要运行[自签脚本](./scripts/self-sign-macos-app.sh)，或者改用 Homebrew |
+| Windows x64 | `-setup.exe`（未签名，SmartScreen 可能会提示） |
+| Linux x64 | `.AppImage`、`.deb` 或 `.rpm`（需要图形会话和 WebKitGTK 运行时） |
 
-表格对应截至 2026-10-03 查到的最新公开版本 [app-v2026.9.20](https://github.com/bigduu/Bodhi-AI/releases/tag/app-v2026.9.20)，表示有这些发布产物，不表示本次文档更新实测了所有平台。Linux 需要图形会话及对应的 WebKitGTK/运行时依赖。源码构建请遵循 [Tauri 平台前置要求](https://v2.tauri.app/start/prerequisites/)。
+装好后打开 **设置 → 提供方**，填入你能用的模型服务商的 Key，然后试试：*“解释一下这个文件夹，
+再提一个小改进。”* 建议先用一个小的示例项目，再让它修改文件。AI 回复仍需要模型服务商：本地执行
+不代表模型在本地运行，也不代表请求不会离开你的电脑。
 
-## 在 macOS 上通过 Homebrew 安装
+表格对应截至 2026-10-04 的最新公开版本 [app-v2026.9.20](https://github.com/bigduu/Bodhi-AI/releases/tag/app-v2026.9.20)，表示有这些发布产物，不表示本次文档更新实测了所有平台。源码构建请遵循 [Tauri 平台前置要求](https://v2.tauri.app/start/prerequisites/)。
+
+### Homebrew 安装说明
 
 ```sh
 brew tap bigduu/tap
@@ -53,7 +62,7 @@ flowchart LR
   Bamboo --> Provider["已配置的模型提供方与工具"]
 ```
 
-Bodhi 打包启动页、经过校验的前端资源和独立的 `bamboo serve` sidecar，不将 Bamboo 运行时作为 Rust 库链接。[Nova](https://github.com/bigduu/nova) 提供需单独配置的电脑/浏览器工具；仅安装桌面外壳不代表这些工具已经就绪。[bodhi-server](https://github.com/bigduu/bodhi-server) 是托管账号/代理场景的独立服务，不是本地执行引擎。
+Bodhi 打包启动页、经过校验的前端资源和独立的 `bamboo serve` sidecar，不将 Bamboo 运行时作为 Rust 库链接。[Nova](https://github.com/bigduu/Nova) 提供需单独配置的电脑/浏览器工具；仅安装桌面外壳不代表这些工具已经就绪。[bodhi-server](https://github.com/bigduu/bodhi-server) 是托管账号/代理场景的独立服务，不是本地执行引擎。
 
 ## 源码与已发布应用的区别
 
@@ -87,3 +96,7 @@ npm run test:build      # 来源选择与装配测试，不调用 Cargo
 ```
 
 仅在浏览器中开发请参阅 [Lotus Next README](https://github.com/bigduu/lotus-next)。来源选择、包验证、诊断、公开/内部模式以及隔离的 macOS 重启验收说明保留在[开发指南](docs/development.zh-CN.md)。
+
+## 许可证
+
+项目自有代码和文档采用 [MIT 许可证](./LICENSE)。第三方组件保留各自的许可证和版权声明。
