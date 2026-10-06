@@ -191,7 +191,10 @@ function download(file, url, sha256) {
     const temporary = `${file}.${process.pid}.part`;
     try {
       execFileSync("curl", ["-fLsS", "--retry", "2", "--speed-limit", "10000", "--speed-time", "45", "-o", temporary, url], { stdio: "inherit" });
-      if (sha256File(temporary) !== sha256) throw new Error(`Downloaded archive checksum mismatch: ${url}`);
+      const downloadedSha256 = sha256File(temporary);
+      if (downloadedSha256 !== sha256) {
+        throw new Error(`Downloaded archive checksum mismatch: ${url} (expected ${sha256}, got ${downloadedSha256})`);
+      }
       fs.renameSync(temporary, file);
     } finally {
       if (fs.existsSync(temporary)) fs.rmSync(temporary);

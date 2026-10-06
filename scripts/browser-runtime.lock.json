@@ -22,13 +22,13 @@
       "platform": "linux64",
       "nodePlatform": "linux-x64",
       "nodeSha256": "6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff",
-      "browserSha256": "e2e445b75af391a6208d0d280d28dbd91720f0bf05ed75a16adc16b8edccd07b"
+      "browserSha256": "3cfc2bd00d1bafcf8a68dc74c9c92bb7150ddc8d26ade948a776316e1cec4f14"
     },
     "x86_64-pc-windows-msvc": {
       "platform": "win64",
       "nodePlatform": "win-x64",
       "nodeSha256": "158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721cef75de9e541",
-      "browserSha256": "78b77b71eb3411722a9036379f435222743cc03728f5c3548233b3b385ef0273"
+      "browserSha256": "46cc69ef55ba29268ffe32dda4192a9d2165be42c3f4e923241153d519493aea"
     }
   }
 }
