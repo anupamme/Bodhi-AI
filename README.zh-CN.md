@@ -78,7 +78,7 @@ Bodhi 打包启动页、经过校验的前端资源和独立的 `bamboo serve` s
 
 ## 从 Zenith 开发
 
-按 Zenith 记录的 pin 初始化子模块，再安装界面和外壳依赖。需要 Node.js 22.12+（Lotus Next 声明的最低版本）、npm、Rust 1.95+（固定的 Bamboo 要求）以及对应平台的 Tauri 前置依赖。
+按 Zenith 记录的 pin 初始化子模块，再安装界面和外壳依赖。当前 macOS 源码构建需要 macOS 13.5+。需要 Node.js 22.12+（Lotus Next 声明的最低版本）、npm、Rust 1.95+（固定的 Bamboo 要求）以及对应平台的 Tauri 前置依赖。
 
 ```bash
 # 从 Zenith 检出目录开始
@@ -95,7 +95,7 @@ npm run tauri:build     # 装配生产桌面包
 npm run test:build      # 来源选择与装配测试，不调用 Cargo
 ```
 
-仅在浏览器中开发请参阅 [Lotus Next README](https://github.com/bigduu/lotus-next)。来源选择、包验证、诊断、公开/内部模式以及隔离的 macOS 重启验收说明保留在[开发指南](docs/development.zh-CN.md)。
+仅在浏览器中开发请参阅 [Lotus Next README](https://github.com/bigduu/lotus-next)。来源选择、包验证、诊断、内置浏览器 runtime以及隔离的 macOS 重启验收说明保留在[开发指南](docs/development.zh-CN.md)。
 
 ## 许可证
 

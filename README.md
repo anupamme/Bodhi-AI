@@ -86,7 +86,7 @@ A newer npm frontend does not update an already released desktop installer. Sour
 
 ## Develop from Zenith
 
-Initialize Zenith's submodules at its recorded pins, then install both UI and shell dependencies. Use Node.js 22.12+ (Lotus Next's declared minimum), npm, Rust 1.95+ (the pinned Bamboo requirement) and the platform-specific Tauri prerequisites.
+Initialize Zenith's submodules at its recorded pins, then install both UI and shell dependencies. Current macOS source builds require macOS 13.5+. Use Node.js 22.12+ (Lotus Next's declared minimum), npm, Rust 1.95+ (the pinned Bamboo requirement) and the platform-specific Tauri prerequisites.
 
 ```bash
 # From the Zenith checkout
@@ -103,7 +103,7 @@ npm run tauri:build     # Assemble a production desktop bundle
 npm run test:build      # Source-selection and assembly tests (no Cargo)
 ```
 
-For browser-only development, use the [Lotus Next README](https://github.com/bigduu/lotus-next). Detailed source selection, package verification, diagnostics, public/internal modes and isolated macOS restart acceptance remain in the [development guide](docs/development.md).
+For browser-only development, use the [Lotus Next README](https://github.com/bigduu/lotus-next). Detailed source selection, package verification, diagnostics, bundled browser runtime and isolated macOS restart acceptance remain in the [development guide](docs/development.md).
 
 ## License
 

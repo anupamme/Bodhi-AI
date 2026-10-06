@@ -72,11 +72,11 @@ release workflow 在回滚窗口内暴露唯一的 `frontend_package` 选择。�
 
 Zenith release train 负责下游发布编排。Bodhi 装配通过本身不等于发布 Lotus Next，也不代表完成更广泛的根/子 agent Jiandu 持久化验收。历史或手动 Bamboo 检出的回滚 embed 输出若为符号链接会关闭式失败，原有链接及目标保持不变。
 
-### 内部 / 公开构建模式
-
-`is_internal_build_mode()` 读取编译期 `option_env!("BODHI_INTERNAL_BUILD")` 或运行期环境变量。内部构建启动时弹出确认对话框，公开构建直接进入。普通 public/internal Tauri 入口仅选择外壳模式，不调用旧前端品牌脚本。现有 `rebrand:*` 是旧 Lotus 的维护工具，不属于本地 Lotus Next 组装路径。
-
 ---
+
+### 内置浏览器 runtime
+
+Bodhi 只有一种构建模式。`npm run tauri:dev` 和 `npm run tauri:build` 自动准备固定版本的 Node、`playwright-core`、Chromium headless shell，以及所选 Bamboo 检出的浏览器 host。生成的 `src-tauri/browser-runtime/` 作为应用资源打包，启动时用绝对路径传给 sidecar。首次构建下载并校验归档，后续复用下载缓存，并自动更新变化的 host 资源，无需另行安装浏览器依赖。macOS 源码构建要求 13.5 或更新版本，与内置 Node 一致。runtime 资源保留 Node、Playwright 和 Chromium 的许可证。macOS 中的浏览器代码使用与应用相同的身份签名。Linux 仍需 Chromium 系统库，构建机器应通过固定版本的 Playwright CLI 安装。
 
 ## 快速开始与开发
 
@@ -97,19 +97,10 @@ npm run tauri:dev
 
 `tauri:dev` 按 `beforeDevCommand` 构建并校验 Lotus Next、装配资源、从同级 Bamboo 编译 API-only debug sidecar，再在回环地址端口 `1420` 启动 Lotus Next Vite，端口冲突会失败。窗口使用 `devUrl: http://localhost:1420` 提供 HMR；设置 `BODHI_SIDECAR_FRONTEND` 后，也可在 debug 外壳中检验 sidecar 提供的同一份生产资源。
 
-带品牌模式的开发：
-
-```bash
-npm run tauri:dev:public      # 公开模式
-npm run tauri:dev:internal    # 内部模式（带启动确认）
-```
-
 ### 构建
 
 ```bash
 npm run tauri:build           # 生产打包（bundle.targets: all）
-npm run tauri:build:public    # 公开模式打包
-npm run tauri:build:internal  # 内部模式打包
 ```
 
 `tauri:build` 通过 `beforeBuildCommand` 运行 `scripts/build-sidecar.cjs`，得到经过校验的 Lotus Next 资源和 release 模式的 API-only Bamboo。Tauri 将启动页、资源和可执行文件一起打包。单独 `cargo build` 仍允许 CI 使用无功能占位文件检查外壳编译，但它不构成可运行的本地应用组装。
@@ -162,7 +153,6 @@ npm run test:managed-restart -- --help
 |---|---|
 | `BODHI_OPEN_DEVTOOLS` | 真值时启动后自动打开 WebView 开发者工具 |
 | `BODHI_WEBVIEW_DIAG` | 真值时若前端未挂载，注入诊断覆盖层 |
-| `BODHI_INTERNAL_BUILD` | 真值时启用内部构建启动确认对话框 |
 | `BODHI_BACKEND_PORT` | 覆盖 sidecar 后端端口（默认 `9562`） |
 | `BODHI_SIDECAR_FRONTEND` | 在 debug/dev 构建中强制 webview 使用 sidecar 前端 |
 

@@ -43,10 +43,12 @@
       "binaries/bamboo"
     ],
     "resources": {
-      "../.bodhi-frontend/": "frontend/"
+      "../.bodhi-frontend/": "frontend/",
+      "browser-runtime/": "browser-runtime/"
     },
     "macOS": {
-      "signingIdentity": "Zenith Nova Code Signing"
+      "signingIdentity": "Zenith Nova Code Signing",
+      "minimumSystemVersion": "13.5"
     },
     "icon": [
       "icons/32x32.png",

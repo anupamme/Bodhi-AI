@@ -194,6 +194,14 @@ pub fn spawn<R: Runtime>(
         );
     }
 
+    let resources = app.path().resource_dir().map_err(|e| e.to_string())?;
+    let [node, host, browser] = crate::browser_runtime::resolve(&resources)?;
+    log::info!("Managed browser runtime: {}", host.display());
+    command = command
+        .env("BAMBOO_BROWSER_NODE", node)
+        .env("BAMBOO_BROWSER_HOST_SCRIPT", host)
+        .env("BAMBOO_BROWSER_EXECUTABLE", browser);
+
     let (mut rx, child) = command
         .spawn()
         .map_err(|e| format!("spawn bamboo sidecar: {e}"))?;
