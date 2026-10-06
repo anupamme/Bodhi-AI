@@ -6,11 +6,12 @@ use std::time::Duration;
 use tauri::menu::{Menu, MenuItem, Submenu, HELP_SUBMENU_ID};
 use tauri::Manager;
 use tauri::{App, Runtime};
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 use tokio::time::sleep;
 
 pub mod app_settings;
+pub mod browser_runtime;
 #[cfg(test)]
 #[path = "../build_support.rs"]
 mod build_support;
@@ -129,59 +130,6 @@ fn schedule_webview_diag<R: Runtime>(app: &App<R>) {
     });
 }
 
-fn is_internal_build_mode() -> bool {
-    if let Some(compiled_flag) = option_env!("BODHI_INTERNAL_BUILD") {
-        return parse_truthy_flag(compiled_flag);
-    }
-
-    std::env::var("BODHI_INTERNAL_BUILD")
-        .map(|value| parse_truthy_flag(&value))
-        .unwrap_or(false)
-}
-
-fn show_internal_startup_confirmation<R: Runtime>(app: &App<R>) {
-    if !is_internal_build_mode() {
-        return;
-    }
-
-    if let Some(main_window) = app.get_webview_window("main") {
-        if let Err(error) = main_window.hide() {
-            log::warn!(
-                "Failed to hide main window before startup confirmation: {}",
-                error
-            );
-        }
-    }
-
-    let app_handle = app.handle().clone();
-    app.dialog()
-        .message(
-            "This is an internal development build of Bodhi.\n\nAccept to continue, or decline to exit.",
-        )
-        .title("Welcome to Bodhi")
-        .kind(MessageDialogKind::Warning)
-        .buttons(MessageDialogButtons::OkCancelCustom(
-            "Accept and Continue".to_string(),
-            "Decline and Exit".to_string(),
-        ))
-        .show(move |accepted| {
-            if accepted {
-                if let Some(window) = app_handle.get_webview_window("main") {
-                    if let Err(error) = window.show() {
-                        log::warn!("Failed to show main window after confirmation: {}", error);
-                    }
-                    if let Err(error) = window.set_focus() {
-                        log::warn!("Failed to focus main window after confirmation: {}", error);
-                    }
-                }
-                return;
-            }
-
-            log::info!("Startup confirmation declined; exiting application");
-            app_handle.exit(0);
-        });
-}
-
 fn show_startup_failure<R: Runtime>(app: &tauri::AppHandle<R>, message: &str) {
     log::error!("Bodhi failed to start: {message}");
     if let Some(window) = app.get_webview_window("main") {
@@ -290,16 +238,11 @@ fn setup<R: Runtime>(app: &mut App<R>) -> std::result::Result<(), Box<dyn std::e
         }
     });
 
-    show_internal_startup_confirmation(app);
     maybe_open_devtools(app);
     schedule_webview_diag(app);
 
-    // One-time first-launch offer to put `bamboo` on PATH (also reachable any
-    // time via Help → 安装 bamboo 命令行工具…). Skipped in internal-build mode
-    // so it never stacks on top of the startup confirmation dialog.
-    if !is_internal_build_mode() {
-        cli_install::maybe_offer_on_startup(app.handle());
-    }
+    // One-time first-launch offer, also available from the Help menu.
+    cli_install::maybe_offer_on_startup(app.handle());
 
     Ok(())
 }

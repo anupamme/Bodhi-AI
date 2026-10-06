@@ -72,11 +72,11 @@ The release workflow exposes one `frontend_package` choice for the rollback wind
 
 The Zenith release train owns downstream release orchestration. A successful Bodhi assembly alone does not publish Lotus Next or certify broader root/child Jiandu persistence. Historical or manual Bamboo checkouts with a rollback embed output symlink fail closed; the existing link and target are left untouched.
 
-### Internal vs public build mode
-
-`is_internal_build_mode()` reads the compile-time `option_env!("BODHI_INTERNAL_BUILD")` or runtime `BODHI_INTERNAL_BUILD`. Internal builds show a startup confirmation dialog; public builds boot straight in. The normal public/internal Tauri variants select this shell mode without invoking legacy frontend rebranding. Existing `rebrand:*` utilities are legacy Lotus maintenance commands and are not part of local Lotus Next assembly.
-
 ---
+
+### Bundled browser runtime
+
+Bodhi has one build mode. `npm run tauri:dev` and `npm run tauri:build` prepare a pinned Node executable, `playwright-core`, Chromium headless shell and the browser host from the selected Bamboo checkout. The generated `src-tauri/browser-runtime/` directory is bundled as an application resource and supplied to the managed sidecar with absolute paths. First builds download verified archives; later builds reuse the download cache and refresh changed host resources automatically. No separate browser dependency installation is needed. macOS source builds require 13.5 or newer, matching the bundled Node binary. Node, Playwright and Chromium license notices are retained in the runtime resource. macOS builds sign nested browser code using the same identity as the application. Linux machines still need Chromium system libraries; install them with the pinned Playwright CLI on the build runner.
 
 ## Quick Start & Development
 
@@ -97,19 +97,10 @@ npm run tauri:dev
 
 `tauri:dev` follows `beforeDevCommand`: it builds and verifies Lotus Next, stages its resources, builds an API-only debug sidecar from sibling `../bamboo`, and starts Lotus Next's Vite server on loopback port `1420` with strict-port behavior. The window uses `devUrl: http://localhost:1420` for HMR. The same verified resources are available when `BODHI_SIDECAR_FRONTEND` is set to exercise sidecar-served assets in a debug shell.
 
-Branded dev variants:
-
-```bash
-npm run tauri:dev:public      # public mode
-npm run tauri:dev:internal    # internal mode (startup confirmation)
-```
-
 ### Build
 
 ```bash
 npm run tauri:build           # production bundle (bundle.targets: all)
-npm run tauri:build:public    # public-mode bundle
-npm run tauri:build:internal  # internal-mode bundle
 ```
 
 `tauri:build` runs `scripts/build-sidecar.cjs` through `beforeBuildCommand`: verified Lotus Next resources plus a release-mode API-only Bamboo sidecar. Tauri bundles the splash, resources and executable. Bare `cargo build` still supports CI shell compilation with inert placeholders; those are not runnable local app assembly.
@@ -162,7 +153,6 @@ The visual record is an explicit headless black-box capture of the exact live ma
 |---|---|
 | `BODHI_OPEN_DEVTOOLS` | Open devtools on launch when truthy |
 | `BODHI_WEBVIEW_DIAG` | Inject a diagnostics overlay if the frontend fails to mount, when truthy |
-| `BODHI_INTERNAL_BUILD` | Enable the internal-build startup confirmation dialog when truthy |
 | `BODHI_BACKEND_PORT` | Override the sidecar backend port (default `9562`) |
 | `BODHI_SIDECAR_FRONTEND` | Force the webview to use the sidecar frontend in debug/dev builds |
 
