@@ -3,6 +3,7 @@ name = "bodhi"
 version = "0.0.0"
 description = "A Tauri App"
 authors = ["bigduu"]
+license = "MIT"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -15,6 +16,7 @@ name = "bodhi_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
+serde_json = { workspace = true }
 tauri-build = { workspace = true }
 
 [dependencies]
@@ -81,8 +83,6 @@ default = []
 # Enable the Tauri Web Inspector (devtools). Intended for development/debug
 # builds only; keep it out of `default` so release builds ship without it.
 dev = ["tauri/devtools"]
-# Internal company features - only enable in company environment
-internal = []
 
 [dev-dependencies]
 tempfile = { workspace = true }

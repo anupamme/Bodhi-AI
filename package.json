@@ -2,6 +2,7 @@
   "name": "bodhi-shell",
   "private": true,
   "version": "0.0.0",
+  "license": "MIT",
   "description": "Bodhi AI is a desktop AI agent that moves work forward, shows its work, and turns successful runs into automation.",
   "type": "module",
   "scripts": {
@@ -16,18 +17,9 @@
     "verify:assembly": "node scripts/verify-assembly.cjs",
     "build:sidecar": "node scripts/build-sidecar.cjs",
     "build:sidecar:dev": "node scripts/build-sidecar.cjs --debug",
-    "rebrand:public": "cd ../lotus && npm run rebrand:public",
-    "rebrand:internal": "cd ../lotus && npm run rebrand:internal",
-    "rebrand:check": "cd ../lotus && npm run rebrand:check",
-    "shell:rebrand:public": "node scripts/rebrand-shell.cjs --target=public",
-    "shell:rebrand:internal": "node scripts/rebrand-shell.cjs --target=internal",
     "tauri": "tauri",
-    "tauri:dev": "tauri dev",
-    "tauri:dev:public": "node scripts/tauri-mode.cjs --mode=public --target=dev",
-    "tauri:dev:internal": "node scripts/tauri-mode.cjs --mode=internal --target=dev",
-    "tauri:build": "tauri build",
-    "tauri:build:public": "node scripts/tauri-mode.cjs --mode=public --target=build",
-    "tauri:build:internal": "node scripts/tauri-mode.cjs --mode=internal --target=build"
+    "tauri:dev": "node scripts/tauri-dev.cjs",
+    "tauri:build": "tauri build"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

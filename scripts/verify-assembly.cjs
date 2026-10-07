@@ -127,13 +127,14 @@ function verifySidecar(root, target) {
   return { binary, size: metadata.size, architecture: expected.name };
 }
 
-module.exports = { verifySidecar };
+module.exports = { verifySidecar, expectedArchitecture, elfCpuType, peCpuType };
 
 if (require.main === module) {
   try {
     const target = process.argv[2] || process.env.BAMBOO_SIDECAR_TARGET;
     const receipt = verifyStaged();
     const sidecar = verifySidecar(ROOT, target);
+    require("./browser-runtime.cjs").verifyRuntime(path.join(ROOT, "src-tauri/browser-runtime"), target);
     console.log(
       `Verified ${receipt.packageName}@${receipt.version} and real ${target} ${sidecar.architecture} sidecar (${sidecar.size} bytes).`,
     );

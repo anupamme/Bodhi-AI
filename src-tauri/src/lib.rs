@@ -6,11 +6,12 @@ use std::time::Duration;
 use tauri::menu::{Menu, MenuItem, Submenu, HELP_SUBMENU_ID};
 use tauri::Manager;
 use tauri::{App, Runtime};
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 use tokio::time::sleep;
 
 pub mod app_settings;
+pub mod browser_runtime;
 #[cfg(test)]
 #[path = "../build_support.rs"]
 mod build_support;
@@ -129,59 +130,6 @@ fn schedule_webview_diag<R: Runtime>(app: &App<R>) {
     });
 }
 
-fn is_internal_build_mode() -> bool {
-    if let Some(compiled_flag) = option_env!("BODHI_INTERNAL_BUILD") {
-        return parse_truthy_flag(compiled_flag);
-    }
-
-    std::env::var("BODHI_INTERNAL_BUILD")
-        .map(|value| parse_truthy_flag(&value))
-        .unwrap_or(false)
-}
-
-fn show_internal_startup_confirmation<R: Runtime>(app: &App<R>) {
-    if !is_internal_build_mode() {
-        return;
-    }
-
-    if let Some(main_window) = app.get_webview_window("main") {
-        if let Err(error) = main_window.hide() {
-            log::warn!(
-                "Failed to hide main window before startup confirmation: {}",
-                error
-            );
-        }
-    }
-
-    let app_handle = app.handle().clone();
-    app.dialog()
-        .message(
-            "This is an internal development build of Bodhi.\n\nAccept to continue, or decline to exit.",
-        )
-        .title("Welcome to Bodhi")
-        .kind(MessageDialogKind::Warning)
-        .buttons(MessageDialogButtons::OkCancelCustom(
-            "Accept and Continue".to_string(),
-            "Decline and Exit".to_string(),
-        ))
-        .show(move |accepted| {
-            if accepted {
-                if let Some(window) = app_handle.get_webview_window("main") {
-                    if let Err(error) = window.show() {
-                        log::warn!("Failed to show main window after confirmation: {}", error);
-                    }
-                    if let Err(error) = window.set_focus() {
-                        log::warn!("Failed to focus main window after confirmation: {}", error);
-                    }
-                }
-                return;
-            }
-
-            log::info!("Startup confirmation declined; exiting application");
-            app_handle.exit(0);
-        });
-}
-
 fn show_startup_failure<R: Runtime>(app: &tauri::AppHandle<R>, message: &str) {
     log::error!("Bodhi failed to start: {message}");
     if let Some(window) = app.get_webview_window("main") {
@@ -203,6 +151,27 @@ fn managed_backend_initialization(port: u16) -> String {
     // existing Lotus Next runtime gives this trusted numeric port priority over
     // a persisted browser endpoint; no machine address enters the built dist.
     format!("window.__BAMBOO_BACKEND_PORT__ = {port};")
+}
+
+fn ready_frontend_url(
+    sidecar_frontend: bool,
+    port: u16,
+    development_url: Option<&tauri::Url>,
+) -> Result<tauri::Url, String> {
+    if sidecar_frontend {
+        return format!("http://127.0.0.1:{port}")
+            .parse()
+            .map_err(|error| format!("bad sidecar url: {error}"));
+    }
+    let mut url = development_url
+        .cloned()
+        .ok_or("Missing development frontend URL. Use npm run tauri:dev.")?;
+    // The configured startup route serves only the splash. Keep the verified
+    // dev origin, and load Lotus modules only after managed backend readiness.
+    url.set_path("/");
+    url.set_query(None);
+    url.set_fragment(None);
+    Ok(url)
 }
 
 fn setup<R: Runtime>(app: &mut App<R>) -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -233,6 +202,7 @@ fn setup<R: Runtime>(app: &mut App<R>) -> std::result::Result<(), Box<dyn std::e
     app.manage(sidecar::SidecarState::default());
 
     let sidecar_app = app.handle().clone();
+    let development_url = app.config().build.dev_url.clone();
     tauri::async_runtime::spawn(async move {
         // Only the explicitly selected legacy rollback package retains
         // external-server reuse. Lotus Next source and package builds always own
@@ -258,9 +228,9 @@ fn setup<R: Runtime>(app: &mut App<R>) -> std::result::Result<(), Box<dyn std::e
             }
         };
 
-        // Once the backend is healthy, point the webview at it (the sidecar serves
-        // lotus). Release always navigates; in dev (debug) we keep the dev server
-        // unless BODHI_SIDECAR_FRONTEND forces the sidecar frontend (used in tests).
+        // The initial development URL is a module-free startup page. Release
+        // starts at its bundled splash. Both enter Lotus only after this same
+        // owned-sidecar readiness boundary, so bootstrap cannot race startup.
         if let Err(error) = sidecar::wait_for_health(
             port,
             60,
@@ -275,31 +245,24 @@ fn setup<R: Runtime>(app: &mut App<R>) -> std::result::Result<(), Box<dyn std::e
         }
         let use_sidecar_frontend =
             !cfg!(debug_assertions) || std::env::var("BODHI_SIDECAR_FRONTEND").is_ok();
-        if use_sidecar_frontend {
-            if let Some(win) = sidecar_app.get_webview_window("main") {
-                match format!("http://127.0.0.1:{port}").parse::<tauri::Url>() {
-                    Ok(url) => match win.navigate(url) {
-                        Ok(()) => {
-                            log::info!("webview navigated to sidecar http://127.0.0.1:{port}")
-                        }
-                        Err(e) => log::error!("navigate to sidecar failed: {e}"),
-                    },
-                    Err(e) => log::error!("bad sidecar url: {e}"),
-                }
+        if let Some(win) = sidecar_app.get_webview_window("main") {
+            let result = ready_frontend_url(use_sidecar_frontend, port, development_url.as_ref())
+                .and_then(|url| {
+                    log::info!("Managed backend ready; navigating webview to {url}");
+                    win.navigate(url).map_err(|error| error.to_string())
+                });
+            if let Err(error) = result {
+                sidecar::kill(&sidecar_app);
+                show_startup_failure(&sidecar_app, &error);
             }
         }
     });
 
-    show_internal_startup_confirmation(app);
     maybe_open_devtools(app);
     schedule_webview_diag(app);
 
-    // One-time first-launch offer to put `bamboo` on PATH (also reachable any
-    // time via Help → 安装 bamboo 命令行工具…). Skipped in internal-build mode
-    // so it never stacks on top of the startup confirmation dialog.
-    if !is_internal_build_mode() {
-        cli_install::maybe_offer_on_startup(app.handle());
-    }
+    // One-time first-launch offer, also available from the Help menu.
+    cli_install::maybe_offer_on_startup(app.handle());
 
     Ok(())
 }
@@ -436,6 +399,24 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn ready_navigation_keeps_the_dev_origin_and_removes_startup_only_identity() {
+        let startup = tauri::Url::parse("http://127.0.0.1:1420/__bodhi_startup?run=owned").unwrap();
+        assert_eq!(
+            super::ready_frontend_url(false, 9562, Some(&startup))
+                .unwrap()
+                .as_str(),
+            "http://127.0.0.1:1420/"
+        );
+        assert!(super::ready_frontend_url(false, 9562, None).is_err());
+        assert_eq!(
+            super::ready_frontend_url(true, 19562, Some(&startup))
+                .unwrap()
+                .as_str(),
+            "http://127.0.0.1:19562/"
+        );
+    }
+
     #[test]
     fn lotus_next_runtime_gets_only_its_numeric_managed_port() {
         assert_eq!(

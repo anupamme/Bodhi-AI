@@ -341,7 +341,7 @@ test("explicit legacy package staging remains the rollback embed path", (t) => {
 
 // Execute the real assembly script with instrumented process launches. All
 // filesystem work uses an isolated fixture; no Cargo or user checkout is touched.
-function assemble(f, mode, producerLayout = "crate") {
+function assemble(f, mode, producerLayout = "crate", overrides = {}) {
   const bamboo = path.join(f.temp, "bamboo");
   write(path.join(bamboo, "Cargo.toml"), "[workspace]\n");
   const rootOutput = path.join(bamboo, "frontend_package");
@@ -368,7 +368,7 @@ function assemble(f, mode, producerLayout = "crate") {
       packageName: frontend.LEGACY_PACKAGE,
     };
   }
-  const env = { BAMBOO_LOCAL_PATH: bamboo, BAMBOO_FRONTEND_BUILD_MODE: producerLayout === "root" ? "api-only" : "auto" };
+  const env = { BAMBOO_LOCAL_PATH: bamboo, BAMBOO_FRONTEND_BUILD_MODE: producerLayout === "root" ? "api-only" : "auto", ...overrides };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, "build-sidecar.cjs"), "utf8"), {
     __dirname: path.join(f.root, "scripts"),
     console: { log() {}, warn() {}, error() {} },
@@ -386,8 +386,13 @@ function assemble(f, mode, producerLayout = "crate") {
         execFileSync(command, args, options) {
           if (command === "rustc") return "host: x86_64-unknown-linux-gnu\n";
           calls.push({ command, args: [...args], env: { ...options.env } });
-          if (command === "cargo") write(path.join(bamboo, "target/release/bamboo"), "fixture binary");
-          else {
+          if (command === "cargo") {
+            const profile = args.includes("--release") ? "release" : "debug";
+            const targetIndex = args.indexOf("--target");
+            const parts = targetIndex < 0 ? [] : [args[targetIndex + 1]];
+            write(path.join(bamboo, "target", ...parts, profile, "bamboo"), "fixture binary");
+          }
+          else if (args[0] === "scripts/frontend-package.cjs") {
             const outputs = producerLayout === "both" ? [rootOutput, crateOutput] :
               producerLayout === "none" ? [] : [producerLayout === "root" ? rootOutput : crateOutput];
             for (const output of outputs) {
@@ -406,10 +411,11 @@ function assemble(f, mode, producerLayout = "crate") {
 test("local sidecar assembly forces API-only and never invokes the legacy embed builder", (t) => {
   const f = fixture(t);
   const { calls, bamboo } = assemble(f, "local");
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0].command, "cargo");
-  assert.equal(calls[0].env.BAMBOO_FRONTEND_BUILD_MODE, "api-only");
-  assert.ok(calls[0].args.includes("--locked"));
+  assert.equal(calls.length, 2);
+  assert.deepEqual(calls[0].args, ["scripts/browser-runtime.cjs", "x86_64-unknown-linux-gnu"]);
+  assert.equal(calls[1].command, "cargo");
+  assert.equal(calls[1].env.BAMBOO_FRONTEND_BUILD_MODE, "api-only");
+  assert.ok(calls[1].args.includes("--locked"));
   assert.equal(fs.existsSync(path.join(bamboo, "frontend_package")), false);
   assert.equal(fs.readFileSync(path.join(f.root, "src-tauri/binaries/bamboo-x86_64-unknown-linux-gnu"), "utf8"), "fixture binary");
 });
@@ -417,9 +423,10 @@ test("local sidecar assembly forces API-only and never invokes the legacy embed 
 test("locked package sidecar assembly is API-only and carries no embedded UI", (t) => {
   const f = fixture(t);
   const { calls, bamboo } = assemble(f, "next-package");
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0].command, "cargo");
-  assert.equal(calls[0].env.BAMBOO_FRONTEND_BUILD_MODE, "api-only");
+  assert.equal(calls.length, 2);
+  assert.deepEqual(calls[0].args, ["scripts/browser-runtime.cjs", "x86_64-unknown-linux-gnu"]);
+  assert.equal(calls[1].command, "cargo");
+  assert.equal(calls[1].env.BAMBOO_FRONTEND_BUILD_MODE, "api-only");
   assert.equal(fs.existsSync(path.join(bamboo, "frontend_package")), false);
   assert.equal(
     fs.existsSync(path.join(f.root, ".bodhi-frontend/dist/index.html")),
@@ -427,13 +434,26 @@ test("locked package sidecar assembly is API-only and carries no embedded UI", (
   );
 });
 
+test("Tauri hook target and debug profile control both sidecar and browser assembly", (t) => {
+  const { calls } = assemble(fixture(t), "local", "crate", {
+    TAURI_ENV_DEBUG: "true", TAURI_ENV_TARGET_TRIPLE: "aarch64-apple-darwin",
+  });
+  assert.deepEqual(calls[0].args, ["scripts/browser-runtime.cjs", "aarch64-apple-darwin"]);
+  assert.equal(calls[0].env.BODHI_BROWSER_RUNTIME_RELEASE_BUILD, "0");
+  assert.equal(calls[1].args.includes("--release"), false);
+  assert.equal(calls[1].args.at(-1), "aarch64-apple-darwin");
+  assert.throws(() => assemble(fixture(t), "local", "crate", {
+    TAURI_ENV_TARGET_TRIPLE: "aarch64-apple-darwin", BAMBOO_SIDECAR_TARGET: "x86_64-unknown-linux-gnu",
+  }), /must match the Tauri build target/);
+});
+
 test("explicit legacy rollback accepts main/root and dev/crate producers", (t) => {
   for (const layout of ["root", "crate"]) {
     const f = fixture(t);
     const { calls, bamboo } = assemble(f, "legacy-package", layout);
-    assert.deepEqual(calls[0].args, ["scripts/frontend-package.cjs"]);
-    assert.equal(calls[1].command, "cargo");
-    assert.equal(calls[1].env.BAMBOO_FRONTEND_BUILD_MODE, "embedded");
+    assert.deepEqual(calls[1].args, ["scripts/frontend-package.cjs"]);
+    assert.equal(calls[2].command, "cargo");
+    assert.equal(calls[2].env.BAMBOO_FRONTEND_BUILD_MODE, "embedded");
     assert.equal(fs.readFileSync(path.join(bamboo, "crates/app/bamboo-server/frontend_package/lotus-frontend.zip"), "utf8"), "explicit legacy embed");
     if (layout === "crate") assert.equal(fs.readFileSync(path.join(bamboo, "frontend_package/lotus-frontend.zip"), "utf8"), "stale zip");
   }

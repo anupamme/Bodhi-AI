@@ -26,7 +26,7 @@ const { buildFrontend } = require("./web-build.cjs");
 
 const BODHI = path.resolve(__dirname, "..");
 const BAMBOO = path.resolve(BODHI, process.env.BAMBOO_LOCAL_PATH || "../bamboo");
-const isDebug = process.argv.includes("--debug");
+const isDebug = process.argv.includes("--debug") || process.env.TAURI_ENV_DEBUG === "true";
 const profile = isDebug ? "debug" : "release";
 
 const frontend = resolveSource();
@@ -35,6 +35,7 @@ const ownsFrontend = frontend.packageName === NEXT_PACKAGE;
 const buildEnv = {
   ...process.env,
   BAMBOO_FRONTEND_BUILD_MODE: ownsFrontend ? "api-only" : "embedded",
+  BODHI_BROWSER_RUNTIME_RELEASE_BUILD: isDebug ? "0" : "1",
 };
 const run = (command, args, cwd) => execFileSync(command, args, { cwd, env: buildEnv, stdio: "inherit" });
 
@@ -60,7 +61,10 @@ const SOURCE = (
 // `externalBin` lookup (`bamboo-<target-triple>`) resolves to a real binary
 // instead of falling back to the build.rs placeholder.
 const host = hostTriple();
-const triple = (process.env.BAMBOO_SIDECAR_TARGET || "").trim() || host;
+const triple = (process.env.BAMBOO_SIDECAR_TARGET || process.env.TAURI_ENV_TARGET_TRIPLE || "").trim() || host;
+if (process.env.TAURI_ENV_TARGET_TRIPLE && process.env.TAURI_ENV_TARGET_TRIPLE !== triple) {
+  throw new Error("BAMBOO_SIDECAR_TARGET must match the Tauri build target.");
+}
 const isCross = triple !== host;
 const isWin = triple.includes("windows");
 const ext = isWin ? ".exe" : "";
@@ -84,6 +88,9 @@ if (!bambooExists()) {
   console.error(`❌ BAMBOO_SIDECAR_SOURCE=local but bamboo not found at ${BAMBOO}`);
   process.exit(1);
 }
+
+// Prepare all browser executables and dependencies before Tauri stages resources.
+run(process.execPath, ["scripts/browser-runtime.cjs", triple], BODHI);
 
 if (frontend.packageName === LEGACY_PACKAGE && !isDebug) {
   console.log("🔧 Building the explicit legacy rollback frontend into the sidecar…");
